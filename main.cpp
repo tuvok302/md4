@@ -50,14 +50,10 @@ int main(int argc, char *argv[])
     struct stat results; //blindly following instructions for file size
     uint32_t numBlocks;
     bool paddingBlock = false;
-    md4Digest digest = {IV_A,IV_B,IV_C,IV_D};;
-    /*digest.A = IV_A;
-    digest.B = IV_B;
-    digest.C = IV_C;
-    digest.D = IV_D;*/
-    //cout << digest.A << " DIGEST.A" << endl;
-    //uint32_t messageBlock [16];
+    md4Digest digest = {IV_A,IV_B,IV_C,IV_D};
+
     uint32_t key [3] = {K_0, K_1, K_2};
+
     if (stat(argv[1], &results) == 0){
         filesize = results.st_size * 8;
     }
@@ -65,111 +61,61 @@ int main(int argc, char *argv[])
         cout << "DANGER WILL ROBINSON! DANGER! Either file handle invalid, or ... something. GOOD LUCK Star Fox!";
     }
 
-    //cout << filesize << endl;
     numBlocks = filesize >> 9;//set numBlocks to the filesize divided by blocksize, and increment the block size if the remainder is enough to force an additional block
 
-    if ((filesize % 512) > 447) {
-        paddingBlock = true;
+    if ((filesize % 512) > 447) {   //need to iterate through the empty block if
+        paddingBlock = true;        //there exists a padding block
+        numBlocks++;
     }
 
     ifstream fileToBeHashed (argv[1], ios::in | ios::binary);
 
-    bool paddedBlock = false;
+    bool paddedBlock = false; //used for program flow control
     bool lastBlock = false;
-    for (uint32_t i = 0; i < numBlocks+1; i++){ //
-        char buffer[64] = {0};
-        uint32_t messageBlock [16] = {};
+
+    for (uint32_t i = 0; i < numBlocks+1; i++){ //iterate through hashing function loop
+        char buffer[64] = {0}; //holds file input
+        uint32_t messageBlock [16] = {}; //blocks of message data that are used in hashing
         fileToBeHashed.seekg(i * 64);
         fileToBeHashed.read(buffer,64);
-        //cout << uint8_t(buffer) << "ASDFASDFASDFASDFASDF \r\n";
         if (!fileToBeHashed){ //note to self, data in buffer not in messageBlock
-            buffer[fileToBeHashed.gcount()] = 0b10000000;
-            //cout << digest.A << " DIGEST.A B4 first if" << endl;
-            if(!paddingBlock){
-                //cout << digest.A << " DIGEST.A b4 for" << endl;
+            buffer[fileToBeHashed.gcount()] = 0b10000000; //magic constant for padding, needs fixed
+            if(!paddingBlock){//if there isn't a padding block pad with all 0's
                 for (uint16_t j = fileToBeHashed.gcount()+1; j < (512 - 64) / 8; j++){
-                    //cout << digest.A << " DIGEST.A b4 for " << i << endl;
                     buffer[j] = 0;
                 }
-                //cout << digest.A << " DIGEST.A after for" << endl;
-                //cout << "FLIM FLAM FLANNERY " << buffer << "\n";
-                //buffer[512 - 64] = lowOrderFix(filesize);
                 lastBlock = true;
-                //cout << "FLIM FLAM FLANNERY the returnening " << buffer << "\n";
-                //cout << digest.A << " DIGEST.A !padding" << endl;
             }
-            cout << numBlocks << endl;
-            if(paddingBlock && !lastBlock){
-                if(paddedBlock) {
-                    cout << "INSIDE PADDEDBLOCK" << endl;
-                    //numBlocks++;
+            if(paddingBlock && !lastBlock){//if there is a padding block need to first determine if we're in the padding block or not and act accordingly
+                if(paddedBlock) { //if we'd in the padded block it's all zero's except for the last 64 bits
                     for (uint16_t j = 0; j < (64); j++){
                         buffer[j] = 0;
                     }
-                    //buffer[512 - 64] = lowOrderFix(filesize);
-                    //paddedBlock = false;
-                    //paddingBlock = false;
                     lastBlock = true;
                 }
-                if(!paddedBlock){
-                    cout << "A#$%@#$%@#$%@#$ " << fileToBeHashed.gcount() << endl;
-                    numBlocks++;
-                    buffer[fileToBeHashed.gcount()] = 0b10000000;
+                if(!paddedBlock){//if we're not we append a 1 then all 0's
+                    buffer[fileToBeHashed.gcount()] = 0b10000000; //magic constant for padding, needs fixed
                     for (uint16_t j = fileToBeHashed.gcount()+1; j < 64; j++){
                         buffer[j] = 0;
                     }
                     paddedBlock = true;
                 }
             }
-            //cout << fileToBeHashed.gcount() <<  "WHAT WHAT!" << endl;
-            //cout << endl <<(uint32_t(uint8_t(buffer[0]))) << endl;
-            //break; //IN CASE OF EMERGENCY GTFO
         }
-        //cout << digest.A << " DIGEST.A - AFTER" << endl;
-        //cout << endl << "messageBlock[0]: " << messageBlock[0] <<endl;
-        //i = 0;
+        //64 8-bit ints in buffer; so we fix the ordering to little endian and shove them into message blocks
         for(int j = 0; j < 64; j++) { //tested, seems to work, since it operates on 64 8-bit registers (I was tired.  Please don't judge)
-            /*if ((j % 32) == 0){
-                //messageBlock[i] = endiannessFix(messageBlock[i]);
-                //((messageBlock[i] & 0xff) << 24) | ((messageBlock[i] & 0xff00) << 8) | ((messageBlock[i] & 0xff0000) >> 8) | ((messageBlock[i] & 0xff000000) >> 24);
-                i = j/32;
-                cout << "JENKIES!\r\n";
-                messageBlock[i] = 0;
-            }/* //Something something fucking little endian
-            if ((j % 64) == 0) {
-                k = j/32;
-                messageBlock[
-            }*/
-            //cout << "ASDFASDFASDF " << (uint32_t(uint8_t(buffer[j]))) << " ASDFASDFASDF" << endl;
             messageBlock[j/4] = (messageBlock[j/4] << 8) | uint8_t(buffer[j]);  //convert 8 bit int to 32 bit int by shifting left by
-            //cout << "WIGGITY WOGGITY WOO " << (messageBlock[j/4] << 8) << " ASDFASDF " << (uint32_t(uint8_t(buffer[j]))) << endl;
-            //cout << " buff:" << uint32_t(buffer[j]) << " mb:" << messageBlock[0] << " j; " << j << " i: " << i;                                                                                                //enough to position the bits in the correct spot.
         }
+        //if we're in the last block append the file size.  If it's >64 bit we just ignore any higher order bits
+        //because of spec it's appended low order first
+        //hard coded magic constants; need fixed
         if(lastBlock){
-            cout << messageBlock[15] << " " << messageBlock[14] << endl;
             messageBlock[15] = endiannessFix(uint32_t(((filesize) & 0xffffffff00000000) >> 32));
             messageBlock[14] = endiannessFix(uint32_t((filesize) & 0x00000000ffffffff));
-            cout << "ASDFASDFASDFASDF " << endl;
         }
-        /*for(int j = 0; j < 4; j++){
-            uint32_t temp_3 = messageBlock[j*4 + 3];
-            uint32_t temp_2 = messageBlock[j*4 + 2];
-            uint32_t temp_1 = messageBlock[j*4 + 1];
-            uint32_t temp_0 = messageBlock[j*4 + 0];
-            messageBlock[j*4 +0] = temp_3;
-            messageBlock[j*4 +1] = temp_2;
-            messageBlock[j*4 +2] = temp_1;
-            messageBlock[j*4 +3] = temp_0;
-        }*/
-        //cout << endl << "messageBlock[0]: " << messageBlock[0] <<endl;
-        //for (i = 0; i < 512; i++) {
-            //cout << int(buffer[i]);//FILL THIS OUT WITH STUFF THAT HAPPENS WHEN YOU RUN OUT OF DATA (read: padding of the data)
-        //}
-        //cout << endl;
-        md4Digest previousIter = digest; //backup the previous values of A,B,C,D
-        //md4Digest previousIter;
-        //previousIter = digest;
-        //cout << digest.A << "THIS IS PREV ITER" << endl;
+
+        md4Digest previousIter = digest; //backup the previous values of A,B,C,D by spec
+
         for(int j = 0; j < 3; j++) { //add j<3 to command arguments; 3 replace with NUM_ROUNDS, 16 with NUM_OPERATIONS
             int messageOrder [16];
             int rollAmount [4];
@@ -193,36 +139,9 @@ int main(int argc, char *argv[])
                 std::copy(rollAmount_2, rollAmount_2+4, rollAmount);
             }
             for(int k = 0; k < 16; k++) { //and now, to hash
-/*      Round 1: function F
-                    [ABCD  0  3]  [DABC  1  7]  [CDAB  2 11]  [BCDA  3 19]
-                    [ABCD  4  3]  [DABC  5  7]  [CDAB  6 11]  [BCDA  7 19]
-                    [ABCD  8  3]  [DABC  9  7]  [CDAB 10 11]  [BCDA 11 19]
-                    [ABCD 12  3]  [DABC 13  7]  [CDAB 14 11]  [BCDA 15 19]
-        Round 2: function G
-                    [ABCD 0 3]	[DABC 4 5]	[CDAB 8 9]	[BCDA 12 13]
-                    [ABCD 1 3]	[DABC 5 5]	[CDAB 9 9]	[BCDA 13 13]
-                    [ABCD 2 3]	[DABC 6 5]	[CDAB 10 9]	[BCDA 14 13]
-                    [ABCD 3 3]	[DABC 7 5]	[CDAB 11 9]	[BCDA 15 13]
-        Round 2: function H
-                    [ABCD 0  3]	[DABC 8  9]	[CDAB 4  11]	[BCDA 12 15]
-                    [ABCD 2  3]	[DABC 10 9]	[CDAB 6  11]	[BCDA 14 15]
-                    [ABCD 1  3]	[DABC 9  9]	[CDAB 5  11]	[BCDA 13 15]
-                    [ABCD 3  3]	[DABC 11 9]	[CDAB 7  11]	[BCDA 15 15]
-
-*//*
-                for (i = 0; i < 16; i++){
-                    cout << messageOrder[i] << ",";
-                }
-                cout << endl;
-                for (i = 0; i < 4; i++) {
-                     cout << rollAmount[i %4] << ",";
-                }
-                cout << endl;*/
                 uint32_t temp_B = 0;
-                //std::cout << digest.A << " " << digest.B << " " << digest.C << " " << digest.D << " " << temp_B << endl;
-                if (j == 0){
+                if (j == 0){ //casting not required; needs fixed
                     temp_B = ( (uint32_t(digest.A) + uint32_t(uint32_t(F(uint32_t(digest.B), uint32_t(digest.C), uint32_t(digest.D))) + uint32_t(key[j]) + uint32_t(endiannessFix(messageBlock[messageOrder[k]])))));
-                    //cout << ( (temp_B) + 1) << endl;
                 }
                 if (j == 1) {
                     temp_B = ( (digest.A + (G(digest.B, digest.C, digest.D) + key[j] + endiannessFix(messageBlock[messageOrder[k]]))));
@@ -230,23 +149,13 @@ int main(int argc, char *argv[])
                 if (j == 2) {
                     temp_B = ( (digest.A + (H(digest.B, digest.C, digest.D) + key[j] + endiannessFix(messageBlock[messageOrder[k]]))));
                 }
-                //cout << temp_B << " " << key[j]<< endl;
-                //cout << (uint32_t(digest.B)) << " " << (uint32_t((temp_B))) << " " << temp_B << endl;
                 temp_B = RLL32(temp_B, rollAmount[(k % 4)]);
-                //cout << temp_B << "THIS IS TEMP_B <<<<" << endl;
-                //cout << (uint32_t(temp_B)) << " " << uint32_t(~(temp_B)) << " " << digest.A << endl;
-                //std::cout << F(uint32_t(digest.B), uint32_t(digest.C), uint32_t(digest.D)) << endl;
-                std::cout << "A:" << temp_B  << " B:" << digest.B << " C:" << digest.C << " D:" << digest.D << " j:" << j << " k:" << k << " message block" << endiannessFix(messageBlock[k]) << " filesize:" << lowOrderFix(filesize) << endl;//" temp_b:" << temp_B << " messageBlock[messageOrder[k]]:" << endl;//<< endiannessFix(messageBlock[messageOrder[k]]) << " rollAmount[(k % 4)]:" << rollAmount[(k % 4)] << " key[j]:" << key[j] << " " << " " << endl;
+                //std::cout << "A:" << temp_B  << " B:" << digest.B << " C:" << digest.C << " D:" << digest.D << " j:" << j << " k:" << k << " message block" << endiannessFix(messageBlock[k]) << " filesize:" << lowOrderFix(filesize) << endl;//" temp_b:" << temp_B << " messageBlock[messageOrder[k]]:" << endl;//<< endiannessFix(messageBlock[messageOrder[k]]) << " rollAmount[(k % 4)]:" << rollAmount[(k % 4)] << " key[j]:" << key[j] << " " << " " << endl;
                 digest.A = digest.D;
                 digest.D = digest.C;
                 digest.C = digest.B;
                 digest.B = temp_B;
                 //std::cout << digest.A << " " << digest.B << " " << digest.C << " " << digest.D << endl;
-
-                //cout << "A" << k << " : " << digest.A << endl; //actual hashing occurs here
-                //cout << "B" << k << " : " << digest.B << endl; //actual hashing occurs here
-                //cout << "C" << k << " : " << digest.C << endl; //actual hashing occurs here
-                //cout << "D" << k << " : " << digest.D << endl; //actual hashing occurs here
             }
         }
         digest.A = previousIter.A + digest.A;
@@ -254,22 +163,8 @@ int main(int argc, char *argv[])
         digest.C = previousIter.C + digest.C;
         digest.D = previousIter.D + digest.D;
     }
-    /*cout << "STRING" << endl;
-    int ZZZ = F(0x0,0x0,0x100);
-    cout << argv[1] << endl;
-    string test = argv[1];
-    test = md4Padding(test);
-    cout << (test) << endl;
-    char* ZZZZ = "a";
-    //char  *ptr = NULL;
-    char* test2 = "a1h3girqw";
-    int ZZ12 = int(ZZZZ);
-    cout << (int)(*test2) << test2[1]<< endl;*/
-    //cout << filesize << endl;
     fileToBeHashed.close();
     cout << decToHex(endiannessFix(digest.A)) << decToHex(endiannessFix(digest.B)) << decToHex(endiannessFix(digest.C)) << decToHex(endiannessFix(digest.D))<< endl;
-    //cout << digest.A << digest.B << digest.C << digest.D << endl; //actual hashing occurs here
-    //cout << decToHex(digest.A) << endl;
     return 0;
 }
 
