@@ -14,6 +14,8 @@
 #define IV_C	0x98badcfe
 #define IV_D	0x10325476
 
+#define NUM_ROUNDS 3
+#define NUM_OPERATIONS 16
 #define F(X, Y, Z) (((X) & (Y)) | ((~(X)) & (Z)))
 #define G(X, Y, Z) (((X) & (Y)) | ((X) & (Z)) | ((Y) & (Z)))
 #define H(X, Y, Z) (((X) ^ (Y) ^ (Z)))
@@ -116,7 +118,7 @@ int main(int argc, char *argv[])
 
         md4Digest previousIter = digest; //backup the previous values of A,B,C,D by spec
 
-        for(int j = 0; j < 3; j++) { //add j<3 to command arguments; 3 replace with NUM_ROUNDS, 16 with NUM_OPERATIONS
+        for(int j = 0; j < NUM_ROUNDS; j++) { //add j<3 to command arguments; 3 replace with NUM_ROUNDS, 16 with NUM_OPERATIONS
             int messageOrder [16];
             int rollAmount [4];
             if (j == 0) {
@@ -138,7 +140,7 @@ int main(int argc, char *argv[])
                 std::copy(messageOrder_2, messageOrder_2+16, messageOrder);
                 std::copy(rollAmount_2, rollAmount_2+4, rollAmount);
             }
-            for(int k = 0; k < 16; k++) { //and now, to hash
+            for(int k = 0; k < NUM_OPERATIONS; k++) { //and now, to hash
                 uint32_t temp_B = 0;
                 if (j == 0){ //casting not required; needs fixed
                     temp_B = ( (uint32_t(digest.A) + uint32_t(uint32_t(F(uint32_t(digest.B), uint32_t(digest.C), uint32_t(digest.D))) + uint32_t(key[j]) + uint32_t(endiannessFix(messageBlock[messageOrder[k]])))));
