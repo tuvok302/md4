@@ -28,7 +28,6 @@
 #define BLOCKSIZE 512
 #define DIGESTSIZE 128
 
-std::string md4Padding(std::string inputString);
 std::string decToHex(uint32_t value);
 uint32_t endiannessFix(uint32_t value);
 uint64_t lowOrderFix(uint64_t value);
@@ -195,17 +194,3 @@ uint32_t endiannessFix(uint32_t value){
 uint64_t lowOrderFix(uint64_t value){
     return (((value & 0x00000000ffffffff) << 32) | ((value & 0xffffffff00000000) >> 32));
 }
-
-std::string md4Padding(std::string inputString){
-    int paddingLength = 448 - (inputString.size() % BLOCKSIZE);
-    cout << paddingLength << "  " << inputString.size() << endl;
-    if (paddingLength < 0){
-        paddingLength = paddingLength + 512; //If it's between 448 and 512, a whole 512 0's needs to be appended
-        }
-    string paddingString = "1";
-    while(paddingLength > 0){
-        paddingString.append("0");
-        paddingLength--;
-        }
-    return inputString.append(paddingString);
-    }
