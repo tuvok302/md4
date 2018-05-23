@@ -14,7 +14,9 @@ Check RFC1320 for reference strings and output hashes.
 ## TODO
 
 Break into separate files
+
 Make it more easily embeddable in other projects
+
 Start working on Wang's attack
 
 ## License

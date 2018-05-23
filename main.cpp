@@ -30,7 +30,6 @@
 
 std::string decToHex(uint32_t value);
 uint32_t endiannessFix(uint32_t value);
-uint64_t lowOrderFix(uint64_t value);
 
 struct md4Digest {
     uint32_t A;
@@ -189,8 +188,4 @@ std::string decToHex(uint32_t value){
 
 uint32_t endiannessFix(uint32_t value){
     return (((value & 0xff) << 24) | ((value & 0xff00) << 8) | ((value & 0xff0000) >> 8) | ((value & 0xff000000) >> 24));
-}
-
-uint64_t lowOrderFix(uint64_t value){
-    return (((value & 0x00000000ffffffff) << 32) | ((value & 0xffffffff00000000) >> 32));
 }
