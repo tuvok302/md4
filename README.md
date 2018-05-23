@@ -5,14 +5,13 @@ allows you to specify the round and operation step.
 
 ## Motivation
 
-I built this MD4 hashing algorithm to attempt to recreate [Wang's] 
-(https://link.springer.com/chapter/10.1007%2F11426639_1) collision attack on MD4.
+I built this MD4 hashing algorithm to attempt to recreate [Wang's](https://link.springer.com/chapter/10.1007%2F11426639_1) collision attack on MD4.
 
 ## Tests
 
 Check RFC1320 for reference strings and output hashes. 
 
-##TODO
+## TODO
 
 Break into separate files
 Make it more easily embeddable in other projects
