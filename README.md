@@ -1,23 +1,24 @@
 ## Synopsis
 
-DO NOT USE IN PRODUCTION ENVIRONMENTS.  This is a C++ implemenation of the MD4 hashing function that 
-allows you to specify the round and operation step.  
+**DO NOT USE IN PRODUCTION ENVIRONMENTS**
+
+A C++ implementation of the MD4 hashing function which allows the specification of the round and operation steps.  
 
 ## Motivation
 
-I built this MD4 hashing algorithm to attempt to recreate [Wang's](https://link.springer.com/chapter/10.1007%2F11426639_1) collision attack on MD4.
+This MD4 hashing algorithm is an attempt at recreating [Wang's](https://link.springer.com/chapter/10.1007%2F11426639_1) collision attack on MD4.
 
 ## Tests
 
-Check RFC1320 for reference strings and output hashes. 
+Reference strings and output hashes can be found in RFC1320.
 
-## TODO
+## TO-DO
 
-Break into separate files
+* Break into separate files
 
-Make it more easily embeddable in other projects
+* Simplify embeddability for other projects
 
-Start working on Wang's attack
+* Start working on Wang's attack
 
 ## License
 
